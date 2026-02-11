@@ -39,20 +39,38 @@
         opacity: 1;
         pointer-events: auto;
       }
+
+      #hint {
+        position: fixed;
+        left: 50%;
+        top: calc(50% + 46px);
+        transform: translateX(-50%);
+        font: 12px/1.2 Arial, sans-serif;
+        color: #5a5a5a;
+        opacity: 0;
+        transition: opacity 120ms ease;
+      }
+
+      #hint.visible {
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
-    <input id="entry" type="text" autocomplete="off" spellcheck="false" aria-label="hidden entry" />
+    <input id="entry" type="text" autocomplete="off" spellcheck="false" aria-label="hidden entry" placeholder="Enter destination URL" />
+    <div id="hint">Press Enter to open a confirmation page, or Esc to close.</div>
 
     <script>
       const INTERNAL_NAME = "[redacted]";
       const RELAY_PATH = "/service/";
       const input = document.getElementById("entry");
+      const hint = document.getElementById("hint");
 
       document.title = INTERNAL_NAME;
 
       const hideInput = () => {
         input.classList.remove("visible");
+        hint.classList.remove("visible");
         input.value = "";
       };
 
@@ -67,6 +85,7 @@
           event.preventDefault();
           event.stopPropagation();
           input.classList.add("visible");
+          hint.classList.add("visible");
           input.focus();
           input.select();
         }
