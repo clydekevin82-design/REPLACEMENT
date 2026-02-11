@@ -1,0 +1,13 @@
+{
+  "name": "redacted-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal blank site deployment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
