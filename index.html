@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      #entry {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(540px, calc(100vw - 48px));
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: 16px/1.2 Arial, sans-serif;
+        background: rgba(255, 255, 255, 0.97);
+        color: #111;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+      }
+
+      #entry.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <input id="entry" type="text" autocomplete="off" spellcheck="false" aria-label="hidden entry" />
+
+    <script>
+      const INTERNAL_NAME = "[redacted]";
+      const RELAY_PATH = "/service/";
+      const input = document.getElementById("entry");
+
+      document.title = INTERNAL_NAME;
+
+      const hideInput = () => {
+        input.classList.remove("visible");
+        input.value = "";
+      };
+
+      document.addEventListener("click", () => {
+        if (input.classList.contains("visible")) {
+          hideInput();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (event.detail === 3) {
+          event.preventDefault();
+          event.stopPropagation();
+          input.classList.add("visible");
+          input.focus();
+          input.select();
+        }
+      });
+
+      input.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideInput();
+          return;
+        }
+
+        if (event.key !== "Enter") {
+          return;
+        }
+
+        const raw = input.value.trim();
+        if (!raw) {
+          hideInput();
+          return;
+        }
+
+        const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        const target = RELAY_PATH + encodeURIComponent(withScheme);
+
+        window.location.assign(target);
+      });
+    </script>
+  </body>
+</html>
