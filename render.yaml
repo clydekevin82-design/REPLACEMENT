@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: redacted-site
+    env: node
+    buildCommand: ""
+    startCommand: npm start
+    autoDeploy: true
