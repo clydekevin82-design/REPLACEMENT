@@ -54,19 +54,93 @@
       #hint.visible {
         opacity: 1;
       }
+
+      #hopback {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        width: min(540px, calc(100vw - 48px));
+        font: 13px/1.35 Arial, sans-serif;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.94);
+      }
+
+      #hopback.hidden {
+        display: none;
+      }
+
+      #hopback-link {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
     <input id="entry" type="text" autocomplete="off" spellcheck="false" aria-label="hidden entry" placeholder="Enter destination URL" />
     <div id="hint">Press Enter to open a confirmation page, or Esc to close.</div>
+    <div id="hopback" class="hidden" aria-live="polite">
+      <strong>Hopback:</strong>
+      <span id="hopback-link"></span>
+      <button id="hopback-open" type="button">Open</button>
+      <button id="hopback-clear" type="button">Clear</button>
+    </div>
 
     <script>
       const INTERNAL_NAME = "[redacted]";
       const RELAY_PATH = "/service/";
+      const HOPBACK_KEY = "lastDestinationUrl";
       const input = document.getElementById("entry");
       const hint = document.getElementById("hint");
+      const hopback = document.getElementById("hopback");
+      const hopbackLink = document.getElementById("hopback-link");
+      const hopbackOpen = document.getElementById("hopback-open");
+      const hopbackClear = document.getElementById("hopback-clear");
 
       document.title = INTERNAL_NAME;
+
+      const normalizeDestination = (raw) => {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+          return "";
+        }
+
+        return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+      };
+
+      const saveHopback = (destination) => {
+        localStorage.setItem(HOPBACK_KEY, destination);
+      };
+
+      const readHopback = () => localStorage.getItem(HOPBACK_KEY) || "";
+
+      const renderHopback = () => {
+        const destination = readHopback();
+        if (!destination) {
+          hopback.classList.add("hidden");
+          hopbackLink.textContent = "";
+          return;
+        }
+
+        hopback.classList.remove("hidden");
+        hopbackLink.textContent = destination;
+        hopbackLink.title = destination;
+      };
+
+      const openDestination = (destination) => {
+        const target = RELAY_PATH + encodeURIComponent(destination);
+        window.location.assign(target);
+      };
+
+      renderHopback();
 
       const hideInput = () => {
         input.classList.remove("visible");
@@ -86,9 +160,24 @@
           event.stopPropagation();
           input.classList.add("visible");
           hint.classList.add("visible");
+          input.value = readHopback();
           input.focus();
           input.select();
         }
+      });
+
+      hopbackOpen.addEventListener("click", () => {
+        const destination = readHopback();
+        if (!destination) {
+          return;
+        }
+
+        openDestination(destination);
+      });
+
+      hopbackClear.addEventListener("click", () => {
+        localStorage.removeItem(HOPBACK_KEY);
+        renderHopback();
       });
 
       input.addEventListener("click", (event) => {
@@ -105,16 +194,15 @@
           return;
         }
 
-        const raw = input.value.trim();
-        if (!raw) {
+        const destination = normalizeDestination(input.value);
+        if (!destination) {
           hideInput();
           return;
         }
 
-        const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-        const target = RELAY_PATH + encodeURIComponent(withScheme);
-
-        window.location.assign(target);
+        saveHopback(destination);
+        renderHopback();
+        openDestination(destination);
       });
     </script>
   </body>
